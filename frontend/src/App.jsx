@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+
 function App() {
   const [query, setQuery] = useState('');
   const [k, setK] = useState(5);
@@ -14,7 +15,8 @@ function App() {
     setLoading(true);
     try {
       // Conexión con el backend
-      const response = await fetch(`http://localhost:8000/search?query=${encodeURIComponent(query)}&k=${k}`);
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/search?query=${encodeURIComponent(query)}&k=${k}`);
       if (!response.ok) throw new Error("Error en la respuesta del servidor");
       
       const data = await response.json();
