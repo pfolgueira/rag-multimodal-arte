@@ -1,13 +1,33 @@
 import chromadb
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 # Load variables from the .env file into the system environment
 load_dotenv()
 
 """Script para comprobar si la conexión con ChromaDB funciona correctamente."""
 
-chroma_path = os.getenv("CHROMA_DB_PATH", "../embeddings/chroma_db")
+# --- BULLETPROOF PATH RESOLUTION ---
+# 1. Find the absolute path of the directory this script is in (backend/)
+SCRIPT_DIR = Path(__file__).resolve().parent
+# 2. Go up one level to the root, then into embeddings/chroma_db
+DEFAULT_DB_PATH = SCRIPT_DIR.parent / "embeddings" / "chroma_db"
+
+# 3. Read the env var, fallback to the absolute path
+chroma_path = os.getenv("CHROMA_DB_PATH", str(DEFAULT_DB_PATH))
+
+print(f"🔍 Intentando conectar a la base de datos en: {chroma_path}")
+
+# --- DIAGNOSTIC CHECK ---
+sqlite_file = Path(chroma_path) / "chroma.sqlite3"
+if sqlite_file.exists():
+    size_kb = sqlite_file.stat().st_size / 1024
+    print(f"✅ Archivo chroma.sqlite3 encontrado. Tamaño: {size_kb:.2f} KB")
+    if size_kb == 0:
+        print("⚠️ ¡CUIDADO! El archivo SQLite pesa 0 bytes. Está vacío en GitHub.")
+else:
+    print("❌ El archivo chroma.sqlite3 NO EXISTE en esta ruta.")
 
 client = chromadb.PersistentClient(path=chroma_path)
 
