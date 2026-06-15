@@ -6,22 +6,27 @@ from sentence_transformers import SentenceTransformer
 import chromadb
 import uvicorn
 import os
+from dotenv import load_dotenv
+
+# Load variables from the .env file into the system environment
+load_dotenv()
 
 app = FastAPI()
 
-# CORS  
+origins = [
+    "http://localhost:5173",          # Local dev url
+    "https://rag-multimodal-arte.vercel.app/" # Deployment url
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Servir imágenes estáticas para poder mostrarlas en el frontend
-IMAGE_PATH = "../dataset/selected_images"
-if os.path.exists(IMAGE_PATH):
-    app.mount("/images", StaticFiles(directory=IMAGE_PATH), name="images")
+app.mount("/images", StaticFiles(directory=os.getenv("IMAGE_DIR")), name="images")
 
 app_data = {}
 
