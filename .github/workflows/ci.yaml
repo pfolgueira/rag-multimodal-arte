@@ -28,7 +28,7 @@ jobs:
         uv pip install --system pytest httpx
 
     - name: Run Tests
+      env:
+        CHROMA_DB_PATH: "../embeddings/chroma_db"
       run: |
-        # Aquí puedes ejecutar tus scripts de prueba (ej. pytest)
-        # Si aún no tienes un archivo de pruebas formal, puedes usar:
         uv run backend/check_chroma_db.py

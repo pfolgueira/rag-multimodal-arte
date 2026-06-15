@@ -1,8 +1,15 @@
 import chromadb
+import os
+from dotenv import load_dotenv
+
+# Load variables from the .env file into the system environment
+load_dotenv()
 
 """Script para comprobar si la conexión con ChromaDB funciona correctamente."""
 
-client = chromadb.PersistentClient(path="../embeddings/chroma_db")
+chroma_path = os.getenv("CHROMA_DB_PATH", "../embeddings/chroma_db")
+
+client = chromadb.PersistentClient(path=chroma_path)
 
 collection = client.get_collection(name="rag_obras_arte")
 
