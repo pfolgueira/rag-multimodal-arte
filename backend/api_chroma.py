@@ -13,6 +13,8 @@ load_dotenv()
 
 app = FastAPI()
 
+chroma_path = os.getenv("CHROMA_DB_PATH", "../embeddings/chroma_db")
+
 origins = [
     "http://localhost:5173",          # Local dev url
     "https://rag-multimodal-arte.vercel.app/" # Deployment url
@@ -36,7 +38,7 @@ async def startup_event():
     
     app_data["model"] = SentenceTransformer("BAAI/bge-m3", cache_folder=None)
     
-    client = chromadb.PersistentClient(path="../embeddings/chroma_db")
+    client = chromadb.PersistentClient(path=chroma_path)
     app_data["collection"] = client.get_collection(name="rag_obras_arte")
     
     print("Modelo de embeddgins cargado y BD inicializada.")
