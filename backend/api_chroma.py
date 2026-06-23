@@ -17,7 +17,7 @@ chroma_path = os.getenv("CHROMA_DB_PATH", "../embeddings/chroma_db")
 
 origins = [
     "http://localhost:5173",          # Local dev url
-    "https://rag-multimodal-arte.vercel.app/" # Deployment url
+    "https://rag-multimodal-arte.vercel.app" # Deployment url
 ]
 
 app.add_middleware(
