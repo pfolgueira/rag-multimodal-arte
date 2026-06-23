@@ -75,7 +75,6 @@ function App() {
               onClick={() => setSelectedArt(art)}
               className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transform transition-transform hover:-translate-y-1 hover:shadow-lg"
             >
-              {/* FastAPI sirve las imágenes estáticamente */}
               {/* FastAPI ya envía la URL correcta en art.image_path */}
               <img 
                 src={art.image_path} 
@@ -106,11 +105,11 @@ function App() {
             >
               <div className="md:w-1/2 bg-gray-100 flex items-center justify-center p-4">
                 <img 
-                  src={`http://localhost:8000/images/${selectedArt.image_id}.jpg`} 
-                  alt={selectedArt.title} 
-                  className="max-h-full max-w-full object-contain rounded-lg shadow-sm"
-                  onError={(e) => { e.target.src = "https://via.placeholder.com/600x600?text=Imagen+No+Disponible"; }}
-                />
+                src={art.image_path} 
+                alt={art.title} 
+                className="w-full h-56 object-cover"
+                onError={(e) => { e.target.src = "https://via.placeholder.com/400x300?text=Imagen+No+Disponible"; }}
+              />
               </div>
               <div className="p-8 md:w-1/2 flex flex-col">
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedArt.title}</h2>
