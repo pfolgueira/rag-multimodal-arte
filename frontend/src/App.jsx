@@ -73,11 +73,11 @@ function App() {
     + (yearMin ? 1 : 0) + (yearMax ? 1 : 0);
 
   return (
-    <div className="min-w-screen min-h-screen bg-gray-50 dark:bg-gray-900 p-8 pt-14 sm:pt-8 font-sans text-gray-800 dark:text-gray-100 relative">
+    <div className="min-w-screen min-h-screen bg-gray-50 dark:bg-gray-900 p-8 font-sans text-gray-800 dark:text-gray-100">
       <div className="max-w-6xl mx-auto">
 
         {/* Top right: dark mode + language */}
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className="flex justify-end gap-2 mb-6">
           <button
             type="button"
             onClick={() => setDarkMode(!darkMode)}
@@ -118,7 +118,7 @@ function App() {
         </div>
 
         {/* Cabecera y Buscador */}
-        <header className="mb-10 text-center sm:pr-0 pr-14">
+        <header className="mb-10 text-center">
           <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">{t("search.title")}</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">{t("search.subtitle")}</p>
 
@@ -130,27 +130,29 @@ function App() {
               placeholder={t("search.placeholder")}
               className="flex-1 p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400 dark:placeholder-gray-500"
             />
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={k}
-                onChange={(e) => setK(e.target.value)}
-                min="1"
-                max="20"
-                className="w-20 p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                title={t("search.results")}
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-[#1F2937] dark:bg-[#00ADB5] text-white dark:text-[#0F172A] hover:bg-gray-700 dark:hover:bg-[#0095A3] text-base font-semibold py-4 px-8 rounded-lg shadow-sm transition-colors disabled:bg-gray-400 dark:disabled:bg-teal-700"
-              >
-                {loading ? t("search.searching") : t("search.button")}
-              </button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={k}
+                  onChange={(e) => setK(e.target.value)}
+                  min="1"
+                  max="20"
+                  className="w-20 p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-center bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  title={t("search.results")}
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-[#1F2937] dark:bg-[#00ADB5] text-white dark:text-[#0F172A] hover:bg-gray-700 dark:hover:bg-[#0095A3] text-base font-semibold py-4 px-8 rounded-lg shadow-sm transition-colors disabled:bg-gray-400 dark:disabled:bg-teal-700 flex-1 sm:flex-none"
+                >
+                  {loading ? t("search.searching") : t("search.button")}
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowFilters(!showFilters)}
-                className="bg-[#1F2937] dark:bg-[#00ADB5] text-white dark:text-[#0F172A] hover:bg-gray-700 dark:hover:bg-[#0095A3] text-base font-semibold px-4 py-4 rounded-lg shadow-sm transition-colors"
+                className="bg-[#1F2937] dark:bg-[#00ADB5] text-white dark:text-[#0F172A] hover:bg-gray-700 dark:hover:bg-[#0095A3] text-base font-semibold px-3 py-4 sm:px-4 rounded-lg shadow-sm transition-colors self-start"
               >
                 {t("filters.button")} {activeFilterCount > 0 && `(${activeFilterCount})`}
               </button>
