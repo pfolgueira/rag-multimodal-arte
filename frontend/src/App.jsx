@@ -107,7 +107,7 @@ function App() {
                 <img 
                   src={selectedArt.image_path} 
                   alt={selectedArt.title} 
-                  className="w-full h-56 object-cover"
+                  className="max-h-full max-w-full object-contain rounded-lg shadow-sm"
                   onError={(e) => { e.target.src = "https://via.placeholder.com/400x300?text=Imagen+No+Disponible"; }}
                 />
               </div>
