@@ -13,22 +13,23 @@ load_dotenv()
 
 app = FastAPI()
 
-chroma_path = os.getenv("CHROMA_DB_PATH", "../embeddings/chroma_db")
+# 1. Read Environment Variables with local fallbacks
+# split(",") allows us to pass multiple URLs separated by commas in the server
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+API_PUBLIC_URL = os.getenv("API_PUBLIC_URL", "http://localhost:8000")
+CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "../embeddings/chroma_db")
+IMAGE_DIR = os.getenv("IMAGE_DIR", "../dataset/selected_images")
 
-origins = [
-    "http://localhost:5173",          # Local dev url
-    "https://rag-multimodal-arte.vercel.app" # Deployment url
-]
-
+# 2. Apply CORS using the environment variable
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.mount("/images", StaticFiles(directory=os.getenv("IMAGE_DIR")), name="images")
+app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
 
 app_data = {}
 
@@ -38,7 +39,7 @@ async def startup_event():
     
     app_data["model"] = SentenceTransformer("BAAI/bge-m3", cache_folder=None)
     
-    client = chromadb.PersistentClient(path=chroma_path)
+    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     app_data["collection"] = client.get_collection(name="rag_obras_arte")
     
     print("Modelo de embeddgins cargado y BD inicializada.")
@@ -78,7 +79,7 @@ async def search_art(query: str, k: int = 5):
                 distancia_bruta = float(results["distances"][0][i])
                 score_similitud = 1.0 - distancia_bruta
                 
-                web_path = f"http://localhost:8000/images/{img_id}.jpg"
+                web_path = f"{API_PUBLIC_URL}/images/{img_id}.jpg"
                 
                 resultados.append(ImageResult(
                     score=score_similitud,
