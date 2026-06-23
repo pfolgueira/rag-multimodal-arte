@@ -1,0 +1,41 @@
+{
+  "search.title": "Buscador Semántico de Arte",
+  "search.subtitle": "Describe la atmósfera, los colores o los elementos de la obra que buscas.",
+  "search.placeholder": "Ej: Un paisaje sombrío con pinceladas marcadas...",
+  "search.button": "Buscar",
+  "search.searching": "Buscando...",
+  "search.results": "Número de resultados (K)",
+
+  "filters.button": "Filtros",
+  "filters.clear": "Limpiar filtros",
+  "filters.title": "Título",
+  "filters.title_placeholder": "Filtrar por título...",
+  "filters.artist": "Artista",
+  "filters.artist_placeholder": "Filtrar por artista...",
+  "filters.type": "Tipo de obra",
+  "filters.type_all": "Todos",
+  "filters.type_painting": "Pintura",
+  "filters.type_drawing": "Dibujo",
+  "filters.type_photograph": "Fotografía",
+  "filters.type_photomechanical": "Impresión fotomecánica",
+  "filters.year_min": "Año mínimo",
+  "filters.year_max": "Año máximo",
+
+  "results.empty_title": "No se encontraron obras con esos criterios.",
+  "results.empty_subtitle": "Intenta con otros términos o ajusta los filtros.",
+  "results.score": "Score",
+
+  "modal.year": "Año",
+  "modal.type": "Tipo",
+  "modal.unknown": "Desconocido",
+  "modal.not_specified": "No especificado",
+  "modal.description": "Descripción del análisis",
+  "modal.close": "Cerrar Detalles",
+
+  "error.connection": "No se pudo conectar con la API. Asegúrate de que FastAPI está corriendo.",
+
+  "dark.tooltip_light": "Modo claro",
+  "dark.tooltip_dark": "Modo oscuro",
+
+  "lang.switch_to": "English"
+}

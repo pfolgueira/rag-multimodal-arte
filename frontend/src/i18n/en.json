@@ -1,0 +1,41 @@
+{
+  "search.title": "Semantic Art Search",
+  "search.subtitle": "Describe the atmosphere, colors, or elements of the artwork you are looking for.",
+  "search.placeholder": "Ex: A gloomy landscape with bold brushstrokes...",
+  "search.button": "Search",
+  "search.searching": "Searching...",
+  "search.results": "Number of results (K)",
+
+  "filters.button": "Filters",
+  "filters.clear": "Clear filters",
+  "filters.title": "Title",
+  "filters.title_placeholder": "Filter by title...",
+  "filters.artist": "Artist",
+  "filters.artist_placeholder": "Filter by artist...",
+  "filters.type": "Art type",
+  "filters.type_all": "All",
+  "filters.type_painting": "Painting",
+  "filters.type_drawing": "Drawing",
+  "filters.type_photograph": "Photograph",
+  "filters.type_photomechanical": "Photomechanical print",
+  "filters.year_min": "Min year",
+  "filters.year_max": "Max year",
+
+  "results.empty_title": "No artworks found with those criteria.",
+  "results.empty_subtitle": "Try different terms or adjust the filters.",
+  "results.score": "Score",
+
+  "modal.year": "Year",
+  "modal.type": "Type",
+  "modal.unknown": "Unknown",
+  "modal.not_specified": "Not specified",
+  "modal.description": "Analysis description",
+  "modal.close": "Close Details",
+
+  "error.connection": "Could not connect to the API. Make sure FastAPI is running.",
+
+  "dark.tooltip_light": "Light mode",
+  "dark.tooltip_dark": "Dark mode",
+
+  "lang.switch_to": "Español"
+}
