@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -6,6 +6,7 @@ from sentence_transformers import SentenceTransformer
 import chromadb
 import uvicorn
 import os
+from typing import Optional
 from dotenv import load_dotenv
 
 # Load variables from the .env file into the system environment
@@ -54,46 +55,123 @@ class ImageResult(BaseModel):
     tipo: str
     description: str
 
+def build_where_filter(tipo: Optional[str],
+                       year_min: Optional[int],
+                       year_max: Optional[int]) -> Optional[dict]:
+    filters = []
+    if tipo:
+        filters.append({"type": {"$eq": tipo}})
+    if year_min is not None:
+        filters.append({"year_numeric": {"$gte": year_min}})
+    if year_max is not None:
+        filters.append({"year_numeric": {"$lte": year_max}})
+
+    if not filters:
+        return None
+    if len(filters) == 1:
+        return filters[0]
+    return {"$and": filters}
+
+
+def match_text(value, filter_text):
+    if not filter_text:
+        return True
+    if not value:
+        return False
+    return filter_text.lower() in str(value).lower()
+
+
 @app.get("/search", response_model=list[ImageResult])
-async def search_art(query: str, k: int = 5):
+async def search_art(
+    query: str = Query("", description="Texto de búsqueda semántica"),
+    k: int = Query(5, description="Número de resultados"),
+    author: Optional[str] = Query(None, description="Filtrar por artista"),
+    tipo: Optional[str] = Query(None, description="Filtrar por tipo de obra"),
+    year_min: Optional[int] = Query(None, description="Año mínimo"),
+    year_max: Optional[int] = Query(None, description="Año máximo"),
+    title: Optional[str] = Query(None, description="Filtrar por título"),
+):
     model = app_data["model"]
     collection = app_data["collection"]
 
     try:
-        # Embedding de la consulta del usuario
-        q_emb = model.encode([query], normalize_embeddings=True).astype("float32").tolist()
-        
-        # Buscar en la BD vectorial
-        results = collection.query(
-            query_embeddings=q_emb,
-            n_results=k,
-            include=["documents", "metadatas", "distances"]
-        )
-        
-        resultados = []
-        if results["ids"] and len(results["ids"][0]) > 0:
-            for i in range(len(results["ids"][0])):
-                img_id = results["ids"][0][i]
-                meta = results["metadatas"][0][i]
+        where_clause = build_where_filter(tipo, year_min, year_max)
 
-                distancia_bruta = float(results["distances"][0][i])
-                score_similitud = 1.0 - distancia_bruta
-                
-                web_path = f"{API_PUBLIC_URL}/images/{img_id}.jpg"
-                
-                resultados.append(ImageResult(
-                    score=score_similitud,
-                    image_id=img_id,
-                    image_path=web_path,
-                    title=str(meta.get("title", "Sin título")),
-                    author=str(meta.get("artist", "Anónimo")),
-                    anio=str(meta.get("date", "Desconocida")),
-                    tipo=str(meta.get("type", "Desconocido")),
-                    description=str(results["documents"][0][i])
-                ))
-                
+        if query and query.strip():
+            # Modo semántico: vector search + filtros en ChromaDB + post-filtro en Python
+            q_emb = model.encode([query], normalize_embeddings=True).astype("float32").tolist()
+            fetch_k = min(k * 10, 500)
+            results = collection.query(
+                query_embeddings=q_emb,
+                n_results=fetch_k,
+                where=where_clause,
+                include=["documents", "metadatas", "distances"]
+            )
+
+            resultados = []
+            if results["ids"] and len(results["ids"][0]) > 0:
+                for i in range(len(results["ids"][0])):
+                    if len(resultados) >= k:
+                        break
+                    img_id = results["ids"][0][i]
+                    meta = results["metadatas"][0][i]
+
+                    if not match_text(meta.get("artist"), author):
+                        continue
+                    if not match_text(meta.get("title"), title):
+                        continue
+
+                    distancia_bruta = float(results["distances"][0][i])
+                    score_similitud = 1.0 - distancia_bruta
+
+                    web_path = f"{API_PUBLIC_URL}/images/{img_id}.jpg"
+
+                    resultados.append(ImageResult(
+                        score=score_similitud,
+                        image_id=img_id,
+                        image_path=web_path,
+                        title=str(meta.get("title", "Sin título")),
+                        author=str(meta.get("artist", "Anónimo")),
+                        anio=str(meta.get("date", "Desconocida")),
+                        tipo=str(meta.get("type", "Desconocido")),
+                        description=str(results["documents"][0][i])
+                    ))
+        else:
+            # Modo filtros: solo metadatos + post-filtro en Python
+            results = collection.get(
+                where=where_clause,
+                limit=4000,
+                include=["documents", "metadatas"]
+            )
+
+            resultados = []
+            if results["ids"]:
+                for i in range(len(results["ids"])):
+                    if len(resultados) >= k:
+                        break
+                    img_id = results["ids"][i]
+                    meta = results["metadatas"][i]
+
+                    if not match_text(meta.get("artist"), author):
+                        continue
+                    if not match_text(meta.get("title"), title):
+                        continue
+
+                    web_path = f"{API_PUBLIC_URL}/images/{img_id}.jpg"
+
+                    resultados.append(ImageResult(
+                        score=1.0,
+                        image_id=img_id,
+                        image_path=web_path,
+                        title=str(meta.get("title", "Sin título")),
+                        author=str(meta.get("artist", "Anónimo")),
+                        anio=str(meta.get("date", "Desconocida")),
+                        tipo=str(meta.get("type", "Desconocido")),
+                        description=str(results["documents"][i])
+                    ))
+
         return resultados
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

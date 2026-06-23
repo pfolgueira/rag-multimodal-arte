@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import re
 import pandas as pd
 import chromadb
 
@@ -29,6 +30,12 @@ def prepare_data(metadata_path, resultados_path):
 
     return df_final
 
+def parse_year_range(date_str):
+    years = re.findall(r'\b(\d{4})\b', date_str)
+    if not years:
+        return None
+    return int(years[0])
+
 def create_chroma_collection_with_metadata(embeddings, df_data, output_folder="../embeddings/chroma_db", collection_name="rag_obras_arte"):
     """
     Crea la colección en ChromaDB insertando vectores, documentos y metadatos.
@@ -57,7 +64,8 @@ def create_chroma_collection_with_metadata(embeddings, df_data, output_folder=".
             "artist": str(row['artist']),
             "date": str(row['date']),
             "type": str(row['type']),
-            "ruta_imagen": str(row['Ruta_Imagen'])
+            "ruta_imagen": str(row['Ruta_Imagen']),
+            "year_numeric": parse_year_range(str(row['date']))
         }
         metadatas.append(meta_dict)
 
