@@ -76,8 +76,9 @@ function App() {
               className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transform transition-transform hover:-translate-y-1 hover:shadow-lg"
             >
               {/* FastAPI sirve las imágenes estáticamente */}
+              {/* FastAPI ya envía la URL correcta en art.image_path */}
               <img 
-                src={`http://localhost:8000/images/${art.image_id}.jpg`} 
+                src={art.image_path} 
                 alt={art.title} 
                 className="w-full h-56 object-cover"
                 onError={(e) => { e.target.src = "https://via.placeholder.com/400x300?text=Imagen+No+Disponible"; }}
