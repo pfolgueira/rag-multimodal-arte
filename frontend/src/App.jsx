@@ -5,7 +5,7 @@ import { useTranslation } from './i18n/index.jsx';
 function App() {
   const { t, lang, setLang } = useTranslation();
   const [query, setQuery] = useState('');
-  const [k, setK] = useState(5);
+  const [k, setK] = useState(4);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedArt, setSelectedArt] = useState(null);
