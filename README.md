@@ -1,121 +1,252 @@
-# 🎨 Buscador de Arte Semántico
+# Art-RAG: Multimodal Semantic Search for Artwork
 
-![Interfaz del buscador](imgs/interface_example.png)
+[![CI](https://github.com/Pablo/rag-multimodal-arte/actions/workflows/ci.yaml/badge.svg)](https://github.com/Pablo/rag-multimodal-arte/actions/workflows/ci.yaml)
+![Python](https://img.shields.io/badge/python-3.12-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ed?logo=docker)](Dockerfile)
 
-## 🗂️ Estructura del proyecto
+> Search for art the way you think about it — by atmosphere, color palette, mood, or composition.
+
+Search the [Rijksmuseum](https://www.rijksmuseum.nl/en) collection using natural language. Instead of filtering by tags or titles, describe what you're looking for: *"A gloomy landscape with bold brushstrokes and a stormy sky"* or *"A serene portrait with soft lighting and pearl details"*.
+
+**[Try the live demo](https://rag-multimodal-arte.vercel.app/)**
+
+![Interface screenshot](imgs/interface_example.png)
+
+---
+
+## Features
+
+- **Semantic search** — query by mood, lighting, technique, or objects using vector embeddings
+- **Metadata filters** — narrow results by artist, title, artwork type, or year range
+- **Multilingual UI** — English / Spanish with one click
+- **Dark mode** — respects system preference, persists your choice
+- **Detail modal** — click any result to read the full VLM-generated art analysis
+- **VLM-powered descriptions** — Google Gemini generates rich, structured descriptions for each artwork
+- **Dual vector indices** — ChromaDB (production API with filters) + FAISS (offline prototyping)
+
+---
+
+## Architecture
 
 ```text
-.
-├── pyproject.toml
-├── README.md
-├── backend/
-│   ├── api_chroma.py
-│   ├── create_chromadb_collection.py
-│   ├── create_faiss_index.py
-│   ├── generate_descriptions.py
-│   ├── generate_embeddings.py
-│   ├── retrieve_results.py
-│   └── test_semantic_search.py
-├── data/
-│   └── resultados_arte.csv
-├── embeddings/
-│   ├── arte_rijksmuseum.index
-│   ├── embeddings_arte_bge_m3.npy
-│   └── chroma_db/
-├── frontend/
-│   ├── package.json
-│   ├── index.html
-│   ├── vite.config.js
-│   └── src/
-└── notebooks/
-	├── analisis_dataset.ipynb
-	└── MS_Challenge_Sesion_Formativa.ipynb
+┌─────────────┐    ┌──────────────────┐    ┌────────────────┐    ┌──────────────┐
+│  Rijksmuseum │    │  Gemini VLM      │    │  BGE-M3        │    │  ChromaDB /  │
+│  Images      │───▶│  (generate desc) │───▶│  (embeddings)  │───▶│  FAISS       │
+└─────────────┘    └──────────────────┘    └────────────────┘    └──────┬───────┘
+                                                                        │
+                                                                        ▼
+┌──────────────┐    ┌──────────────────┐    ┌─────────────────────────┐ │
+│  React UI    │◀───│  FastAPI         │◀───│  /search endpoint       │◀┘
+│  (Vite +     │    │  (CORS + static) │    │  (semantic + filters)   │
+│   Tailwind)  │    └──────────────────┘    └─────────────────────────┘
+└──────────────┘
 ```
 
-Este proyecto está organizado en bloques funcionales para separar claramente el procesamiento de datos, la API y la interfaz web:
+### Pipeline phases
 
-- `backend/`: contiene la lógica principal de búsqueda semántica y los scripts para generar descripciones, embeddings e índices (`FAISS` y `ChromaDB`), además de la API en FastAPI.
-- `data/`: incluye el fichero con las descripciones generadas por el VLM.
-- `dataset/`: carpeta que debe contener las imágenes fuente del proyecto, divididas en `selected_images/` y `test_dataset/`.
-- `embeddings/`: almacena los artefactos generados para la búsqueda semántica (indices vectoriales, matrices de embeddings y base de datos de Chroma).
-- `frontend/`: aplicacián React (Vite) que se comunica con el backend y permite realizar consultas desde una interfaz visual.
-- `notebooks/`: notebooks de exploración y análisis del dataset.
-- `pyproject.toml`: define dependencias y configuración del proyecto Python.
-- `README.md`: documentación principal de instalación y uso.
+1. **Indexing** — Images are sent to Google Gemini, which generates detailed art-historical descriptions. These descriptions are embedded with `BAAI/bge-m3` (SentenceTransformers) and stored in ChromaDB with metadata (title, artist, date, type).
+2. **API** — FastAPI server exposes `GET /search` that accepts a natural language query and optional filters. It encodes the query with the same model, performs vector search in ChromaDB, and returns ranked results.
+3. **UI** — React app (Vite + Tailwind) lets users type queries, adjust filters, browse results in a responsive grid, and inspect full descriptions in a modal.
 
-## 📥 Descarga del dataset de imagenes
+---
 
-Las imágenes utilizadas en este proyecto no se han incluido en el repositorio.
+## Tech Stack
 
-Puedes descargarlas desde los siguientes enlaces:
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python, FastAPI |
+| Vector DB | ChromaDB, FAISS |
+| Embeddings | SentenceTransformers (`BAAI/bge-m3`) |
+| VLM | Google Gemini (`google-genai`) |
+| Frontend | React 19, Vite, Tailwind CSS |
+| Package mgmt | `uv` (Python), npm (frontend) |
+| Container | Docker |
+| CI | GitHub Actions |
+| Deployment | Oracle Cloud (backend), Vercel (frontend) |
 
-- `selected_images`: https://drive.google.com/file/d/1BpIQK04vqM0vkOShM9gd4Byb1YbO-L1Z/view?usp=sharing
-- `test_dataset`: https://drive.google.com/file/d/1hNLfZ6celhMptZNT4wK6wGMnFu82aFLF/view?usp=sharing
+---
 
-Para utilizarlas y ejecutar el proyecto correctamente, crea una carpeta `dataset/` en la raíz del proyecto e incluye dentro ambas carpetas descomprimidas:
+## Quick Start
 
-```text
+### Prerequisites
+
+- Python 3.12+
+- Node.js 18+
+- `uv` (recommended) or `pip`
+
+### 1. Clone & download the dataset
+
+```bash
+git clone https://github.com/Pablo/rag-multimodal-arte.git
+cd rag-multimodal-arte
+```
+
+Download the images from Google Drive and place them in `dataset/`:
+
+- [`selected_images`](https://drive.google.com/file/d/1BpIQK04vqM0vkOShM9gd4Byb1YbO-L1Z/view?usp=sharing)
+- [`test_dataset`](https://drive.google.com/file/d/1hNLfZ6celhMptZNT4wK6wGMnFu82aFLF/view?usp=sharing)
+
+```
 dataset/
 ├── selected_images/
 └── test_dataset/
 ```
 
-## ⚙️ Dependencias gestionadas con `uv`
-
-Este proyecto gestiona las dependencias de Python con `uv`, definidas en `pyproject.toml`.
-
-Pasos recomendados:
-
-1. Instalar `uv` si no lo tienes.
-2. Desde la raíz del proyecto, sincronizar dependencias:
+### 2. Backend
 
 ```bash
+# Install dependencies
 uv sync
-```
 
-3. Ejecutar scripts y servidor con `uv run` para usar el entorno del proyecto.
-
-4. Arrancar el servidor de desarrollo
-
-```bash
+# Start the API (development)
 cd backend
 uv run uvicorn api_chroma:app --reload
 ```
 
-## 🐍 Dependencias con `pip` (alternativa directa)
+The API is now running at `http://localhost:8000`.
 
-Si prefieres no usar `uv`, puedes gestionar dependencias con `pip` usando un entorno virtual.
+### 3. Frontend
 
-1. Crear entorno virtual en la raíz del proyecto:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173` in your browser.
+
+### Alternative: pip
 
 ```bash
 python -m venv .venv
-```
-
-2. Activar entorno virtual:
-
-```bash
 source .venv/bin/activate
-```
-
-3. Actualizar `pip` e instalar dependencias desde `pyproject.toml`:
-
-```bash
-python -m pip install --upgrade pip
 pip install .
-```
-
-4. Arrancar backend con el entorno activo:
-
-```bash
 cd backend
 uvicorn api_chroma:app --reload
 ```
 
-## 💻 Ejecucion del frontend
+---
+
+## Configuration
+
+### Backend (`.env`)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `API_PUBLIC_URL` | `http://localhost:8000` | Public URL for serving images |
+| `ALLOWED_ORIGINS` | `http://localhost:5173` | CORS origins (comma-separated) |
+| `CHROMA_DB_PATH` | `../embeddings/chroma_db` | Path to ChromaDB persistent storage |
+| `IMAGE_DIR` | `../dataset/selected_images` | Directory with artwork images |
+
+### Frontend (`.env`)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_API_URL` | `http://localhost:8000` | Backend API URL |
+
+---
+
+## API Reference
+
+### `GET /search`
+
+Perform a semantic search across the artwork collection.
+
+**Query parameters:**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `query` | string | `""` | Natural language search query |
+| `k` | int | `5` | Number of results to return |
+| `author` | string | — | Filter by artist name (substring match) |
+| `tipo` | string | — | Filter by art type (`painting`, `drawing`, `photograph`, `photomechanical print`) |
+| `year_min` | int | — | Minimum year |
+| `year_max` | int | — | Maximum year |
+| `title` | string | — | Filter by title (substring match) |
+
+**Example response:**
+
+```json
+[
+  {
+    "score": 0.723,
+    "image_id": "SK-A-3236",
+    "image_path": "http://localhost:8000/images/SK-A-3236.jpg",
+    "title": "Portrait of a Young Woman",
+    "author": "Johannes Vermeer",
+    "anio": "1665",
+    "tipo": "painting",
+    "description": "This painting depicts a young woman..."
+  }
+]
+```
+
+---
+
+## Evaluation
+
+The system is benchmarked with **13 curated queries** spanning paintings, drawings, and photographs. Each query targets a specific artwork by describing its mood, composition, colors, and objects.
 
 ```bash
-npm install
-cd frontend
-npm run dev
+uv run python backend/test_semantic_search.py
 ```
+
+---
+
+## Project Structure
+
+```text
+.
+├── backend/
+│   ├── api_chroma.py                  # FastAPI server
+│   ├── create_chromadb_collection.py  # Build ChromaDB index
+│   ├── create_faiss_index.py          # Build FAISS index
+│   ├── generate_descriptions.py       # Gemini VLM pipeline
+│   ├── generate_embeddings.py         # BGE-M3 embedding generation
+│   ├── retrieve_results.py            # FAISS retrieval script
+│   └── test_semantic_search.py        # Evaluation benchmark
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx                    # Main search UI
+│   │   └── i18n/                      # English / Spanish translations
+│   ├── package.json
+│   └── vite.config.js
+├── data/
+│   └── resultados_arte.csv            # VLM-generated descriptions
+├── embeddings/
+│   ├── chroma_db/                     # ChromaDB persistent store
+│   ├── embeddings_arte_bge_m3.npy     # Pre-computed embeddings
+│   └── arte_rijksmuseum.index         # FAISS index
+├── imgs/
+│   └── interface_example.png          # Screenshot
+├── notebooks/                         # EDA and experimentation
+├── Dockerfile
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+## Dataset
+
+The project uses the [Rijksmuseum](https://www.rijksmuseum.nl/en) art collection. Images come from the museum's public dataset and include paintings, drawings, photographs, and photomechanical prints spanning several centuries.
+
+The dataset is split into two parts:
+
+- **`selected_images/`** — ~4,000 images used for the semantic search index
+- **`test_dataset/`** — additional images for evaluation
+
+Both must be downloaded separately (see Quick Start above) as they are not included in the repository.
+
+---
+
+## License
+
+MIT License — feel free to use, modify, and adapt.
+
+---
+
+## Contributing
+
+Issues and pull requests are welcome. For major changes, please open an issue first to discuss what you'd like to change.
