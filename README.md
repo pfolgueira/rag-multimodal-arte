@@ -1,6 +1,6 @@
 # Art-RAG: Multimodal Semantic Search for Artwork
 
-[![CI](https://github.com/Pablo/rag-multimodal-arte/actions/workflows/ci.yaml/badge.svg)](https://github.com/Pablo/rag-multimodal-arte/actions/workflows/ci.yaml)
+[![CI](https://github.com/pfolgueira/rag-multimodal-arte/actions/workflows/ci.yaml/badge.svg)](https://github.com/pfolgueira/rag-multimodal-arte/actions/workflows/ci.yaml)
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ed?logo=docker)](Dockerfile)
