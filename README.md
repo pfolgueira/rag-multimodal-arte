@@ -222,6 +222,7 @@ uv run python backend/test_semantic_search.py
 │   └── interface_example.png          # Screenshot
 ├── notebooks/                         # EDA and experimentation
 ├── Dockerfile
+├── project_report.pdf                 # Project report 
 ├── pyproject.toml
 └── README.md
 ```
