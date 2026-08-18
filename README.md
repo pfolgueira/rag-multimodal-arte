@@ -9,8 +9,6 @@
 
 Search the [Rijksmuseum](https://www.rijksmuseum.nl/en) collection using natural language. Instead of filtering by tags or titles, describe what you're looking for: *"A gloomy landscape with bold brushstrokes and a stormy sky"* or *"A serene portrait with soft lighting and pearl details"*.
 
-**[Try the live demo](https://rag-multimodal-arte.vercel.app/)**
-
 ![Interface screenshot](imgs/interface_example.png)
 
 ---
