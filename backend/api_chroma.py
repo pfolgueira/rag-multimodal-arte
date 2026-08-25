@@ -1,12 +1,13 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
 import chromadb
 import uvicorn
 import os
 from typing import Optional
 from dotenv import load_dotenv
+import requests
+import numpy as np
 
 # Load variables from the .env file into the system environment
 load_dotenv()
@@ -17,6 +18,11 @@ app = FastAPI()
 # split(",") allows us to pass multiple URLs separated by commas in the server
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 API_PUBLIC_URL = os.getenv("API_PUBLIC_URL", "http://localhost:8000")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+EMBEDDING_MODEL = os.getenv(
+    "EMBEDDING_MODEL",
+    "baai/bge-m3"
+)
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "../embeddings/chroma_db")
 IMAGE_BASE_URL = os.getenv("IMAGE_BASE_URL")
 
@@ -34,8 +40,6 @@ app_data = {}
 @app.on_event("startup")
 async def startup_event():
     print("Cargando recursos...")
-    
-    app_data["model"] = SentenceTransformer("BAAI/bge-m3", cache_folder=None)
     
     client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     app_data["collection"] = client.get_collection(name="rag_obras_arte")
@@ -78,6 +82,39 @@ def match_text(value, filter_text):
     return filter_text.lower() in str(value).lower()
 
 
+def get_embedding(text: str):
+    response = requests.post(
+        "https://openrouter.ai/api/v1/embeddings",
+        headers={
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": EMBEDDING_MODEL,
+            "input": text,
+            "encoding_format": "float"
+        },
+        timeout=30,
+    )
+
+    response.raise_for_status()
+
+    embedding = np.array(
+        response.json()["data"][0]["embedding"],
+        dtype=np.float32
+    )
+
+    # Equivalente a normalize_embeddings=True
+    norm = np.linalg.norm(embedding)
+
+    if norm == 0:
+        raise ValueError("El embedding recibido tiene norma 0.")
+
+    embedding = embedding / norm
+
+    return embedding.tolist()
+
+
 @app.get("/search", response_model=list[ImageResult])
 async def search_art(
     query: str = Query("", description="Texto de búsqueda semántica"),
@@ -88,7 +125,6 @@ async def search_art(
     year_max: Optional[int] = Query(None, description="Año máximo"),
     title: Optional[str] = Query(None, description="Filtrar por título"),
 ):
-    model = app_data["model"]
     collection = app_data["collection"]
 
     try:
@@ -96,7 +132,7 @@ async def search_art(
 
         if query and query.strip():
             # Modo semántico: vector search + filtros en ChromaDB + post-filtro en Python
-            q_emb = model.encode([query], normalize_embeddings=True).astype("float32").tolist()
+            q_emb = [get_embedding(query)]
             fetch_k = min(k * 10, 500)
             results = collection.query(
                 query_embeddings=q_emb,
@@ -172,5 +208,12 @@ async def search_art(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    embedding = get_embedding("Una pintura de un paisaje.")
+
+    print("Dimensiones:", len(embedding))
+    print("Primeros valores:", embedding[:5])
+    print("Norma:", np.linalg.norm(embedding))
