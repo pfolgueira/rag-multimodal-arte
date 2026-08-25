@@ -208,12 +208,5 @@ async def search_art(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
-
 if __name__ == "__main__":
-    embedding = get_embedding("Una pintura de un paisaje.")
-
-    print("Dimensiones:", len(embedding))
-    print("Primeros valores:", embedding[:5])
-    print("Norma:", np.linalg.norm(embedding))
+    uvicorn.run(app, host="0.0.0.0", port=8000)
