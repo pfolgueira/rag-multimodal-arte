@@ -24,7 +24,7 @@ jobs:
 
     - name: Install dependencies with uv
       run: |
-        uv pip install --system .
+        uv pip install --system ./backend
         uv pip install --system pytest httpx
 
     - name: Run Tests
