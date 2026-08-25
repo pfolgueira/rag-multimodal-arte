@@ -43,7 +43,7 @@ Search the [Rijksmuseum](https://www.rijksmuseum.nl/en) collection using natural
 
 ### Pipeline phases
 
-1. **Indexing** — Images are sent to Google Gemini, which generates detailed art-historical descriptions. These descriptions are embedded with `BAAI/bge-m3` (SentenceTransformers) and stored in ChromaDB with metadata (title, artist, date, type).
+1. **Indexing** — Images are sent to Google Gemini, which generates detailed art-historical descriptions. These descriptions are embedded with `BAAI/bge-m3` (OpenRouter) and stored in ChromaDB with metadata (title, artist, date, type).
 2. **API** — FastAPI server exposes `GET /search` that accepts a natural language query and optional filters. It encodes the query with the same model, performs vector search in ChromaDB, and returns ranked results.
 3. **UI** — React app (Vite + Tailwind) lets users type queries, adjust filters, browse results in a responsive grid, and inspect full descriptions in a modal.
 
@@ -55,7 +55,7 @@ Search the [Rijksmuseum](https://www.rijksmuseum.nl/en) collection using natural
 |-------|-----------|
 | Backend | Python, FastAPI |
 | Vector DB | ChromaDB, FAISS |
-| Embeddings | SentenceTransformers (`BAAI/bge-m3`) |
+| Embeddings | OpenRouter (`BAAI/bge-m3`) |
 | VLM | Google Gemini (`google-genai`) |
 | Frontend | React 19, Vite, Tailwind CSS |
 | Package mgmt | `uv` (Python), npm (frontend) |
