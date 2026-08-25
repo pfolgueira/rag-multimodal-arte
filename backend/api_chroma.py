@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 import chromadb
@@ -19,7 +18,7 @@ app = FastAPI()
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 API_PUBLIC_URL = os.getenv("API_PUBLIC_URL", "http://localhost:8000")
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "../embeddings/chroma_db")
-IMAGE_DIR = os.getenv("IMAGE_DIR", "../dataset/selected_images")
+IMAGE_BASE_URL = os.getenv("IMAGE_BASE_URL")
 
 # 2. Apply CORS using the environment variable
 app.add_middleware(
@@ -29,8 +28,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
 
 app_data = {}
 
@@ -124,7 +121,7 @@ async def search_art(
                     distancia_bruta = float(results["distances"][0][i])
                     score_similitud = 1.0 - distancia_bruta
 
-                    web_path = f"{API_PUBLIC_URL}/images/{img_id}.jpg"
+                    web_path = f"{IMAGE_BASE_URL}/{img_id}.jpg"
 
                     resultados.append(ImageResult(
                         score=score_similitud,
@@ -157,7 +154,7 @@ async def search_art(
                     if not match_text(meta.get("title"), title):
                         continue
 
-                    web_path = f"{API_PUBLIC_URL}/images/{img_id}.jpg"
+                    web_path = f"{IMAGE_BASE_URL}/{img_id}.jpg"
 
                     resultados.append(ImageResult(
                         score=1.0,
